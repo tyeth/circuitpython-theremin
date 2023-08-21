@@ -369,7 +369,7 @@ async def main():
                 print("Internal Flash")
             with open(CSV_PATH, "a+") as f:
                 print("Writing to", CSV_PATH)
-                f.write("Timestamp, " + json.dumps(DATA_TO_WRITE))
+                f.write(str(time.monotonic_ns) +", " + json.dumps(DATA_TO_WRITE))
                 f.flush()
                 f.close()
             print("Done Writing to Storage, garbage collecting...")
