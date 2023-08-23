@@ -223,7 +223,7 @@ def add_distances_to_previous_readings(dist_matrix, valid_matrix, previous_readi
         print("Adding distance matrix to previous readings", dist_matrix.tolist())
         print("valid_matrix.count(True)", valid_matrix.tolist().count(True))
         print(results.tolist())
-    previous_readings.insert(0, results)
+    previous_readings.insert(0, results.tolist())
     if(len(previous_readings) > MAX_PREVIOUS_DISTANCE_READINGS):
         previous_readings = previous_readings[:MAX_PREVIOUS_DISTANCE_READINGS]
 
