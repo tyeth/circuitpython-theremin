@@ -1,3 +1,50 @@
+# import time
+# import ulab as np
+# import board
+# import busio
+# import adafruit_vl53l5cx
+
+# # Constants
+# HAND_STATIONARY_TIME = 3  # Time in seconds
+# MEASUREMENT_INTERVAL = 0.1  # Time between proximity measurements
+# MAX_MOVEMENT_THRESHOLD = 0.1  # Maximum movement threshold in mm
+
+# # Initialize sensor
+# i2c = busio.I2C(board.SCL, board.SDA)
+# sensor = adafruit_vl53l5cx.VL53L5CX(i2c)
+
+# # Initialize variables
+# previous_proximity = sensor.get_distance()
+# hand_stationary_time = 0
+
+# # Main loop
+# while True:
+#     # Get proximity measurement from the sensor
+#     proximity = sensor.get_distance()
+    
+#     # Calculate the movement difference between consecutive measurements
+#     movement = np.abs(proximity - previous_proximity)
+    
+#     # filter zones at max or min distance range
+
+#     # consider movement threshold larger for MS sufferers, could the theremin then be played? maybe track arm movement more than hand movement?
+    
+#     # If the movement is below the threshold, increment the stationary time
+#     if movement <= MAX_MOVEMENT_THRESHOLD:
+#         hand_stationary_time += MEASUREMENT_INTERVAL
+#         if hand_stationary_time >= HAND_STATIONARY_TIME:
+#             print("Hand has been stationary for 3 seconds.")
+#             break
+#     else:
+#         hand_stationary_time = 0
+    
+#     # Update previous proximity measurement
+#     previous_proximity = proximity
+    
+#     time.sleep(MEASUREMENT_INTERVAL)
+##############################################################
+
+
 # SPDX-FileCopyrightText: 2023 ladyada for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
@@ -29,7 +76,7 @@ DEBUG = False
                         
 I2C_FREQUENCY=1_000_000
 CURRENT_VOLUME = 0.5
-AUDIO_BUFFER_SIZE = 1024
+AUDIO_BUFFER_SIZE = 4096 # default 1024
 
 FRAMERATE = 5 # Hz
 RESOLUTION = RESOLUTION_8X8
@@ -46,6 +93,7 @@ if(board.board_id == "adafruit_feather_rp2040_prop_maker"):
     audio = audiobusio.I2SOut(board.I2S_BIT_CLOCK, board.I2S_WORD_SELECT, board.I2S_DATA)
 elif (board.board_id == "adafruit_qtpy_esp32s2"):
     touch = touchio.TouchIn(board.TX)
+    # board.A0 is card_cs for SD card
     DATA = board.A1
     LRCLK = board.A2
     BCLK = board.A3
@@ -362,16 +410,20 @@ async def main():
             DATA_TO_WRITE = PREVIOUS_DISTANCE_READINGS
             print("Writing to Storage, ", end="")
             if(sdcard and not CSV_PATH):
-                CSV_PATH  = "/sd/" + str(time.monotonic_ns()) + ".csv"
+                CSV_PATH  = "/sd/" + str(time.monotonic_ns()) + ".jsonl"
                 print("SD Card")
             elif(not CSV_PATH):
-                CSV_PATH = "/" + str(time.monotonic_ns()) + ".csv"
+                CSV_PATH = "/" + str(time.monotonic_ns()) + ".jsonl"
                 print("Internal Flash")
-            with open(CSV_PATH, "a+") as f:
-                print("Writing to", CSV_PATH)
-                f.write(str(time.monotonic_ns) +", " + json.dumps(DATA_TO_WRITE))
-                f.flush()
-                f.close()
+                with open(CSV_PATH, "a+") as f:
+                    print("Writing to", CSV_PATH)
+                    try:
+                        f.write("{\"" + str(time.monotonic_ns) +"\": " + json.dumps(DATA_TO_WRITE) + " }\n")
+                    except Exception as e:
+                        print("Failed to write to file", e)
+                    f.flush()
+                    f.close()
+            
             print("Done Writing to Storage, garbage collecting...")
             gc.collect()
             print("Done garbage collecting")
