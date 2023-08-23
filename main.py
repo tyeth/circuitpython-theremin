@@ -411,18 +411,16 @@ async def main():
             print("Writing to Storage, ", end="")
             if(sdcard and not CSV_PATH):
                 CSV_PATH  = "/sd/" + str(time.monotonic_ns()) + ".jsonl"
-                print("SD Card")
+                print("SD Card", CSV_PATH)
             elif(not CSV_PATH):
                 CSV_PATH = "/" + str(time.monotonic_ns()) + ".jsonl"
-                print("Internal Flash")
-                with open(CSV_PATH, "a+") as f:
-                    print("Writing to", CSV_PATH)
-                    try:
-                        f.write("{\"" + str(time.monotonic_ns) +"\": " + json.dumps(DATA_TO_WRITE) + " }\n")
-                    except Exception as e:
-                        print("Failed to write to file", e)
-                    f.flush()
-                    f.close()
+                print("Internal Flash", CSV_PATH)
+            
+            gc.collect()
+            with open(CSV_PATH, "a+") as f:
+                f.write("{\"" + str(time.monotonic_ns()) +"\": " + json.dumps(DATA_TO_WRITE).replace("\n","") + " }\n")
+                f.flush()
+                f.close()
             
             print("Done Writing to Storage, garbage collecting...")
             gc.collect()
